@@ -296,3 +296,133 @@ Confidence: X/10
 * Add security group (port 22 + 80)
 * Auto install nginx using user_data
 * Fully usable server via Terraform
+
+## 📅 Day 04 – Terraform + Git Mistake (Real DevOps Learning)
+
+### 🚨 Problem Faced
+
+While pushing code to GitHub, I encountered this error:
+
+```
+File terraform-provider-aws_v6.42.0_x5 is 862 MB
+This exceeds GitHub's file size limit of 100 MB
+```
+
+---
+
+### 🔍 Root Cause
+
+Terraform automatically created:
+
+```
+.terraform/providers/...
+```
+
+This directory contains:
+
+* Provider binaries (compiled files)
+* OS-specific dependencies
+* Large files (hundreds of MB)
+
+👉 These should **NEVER be committed to Git**
+
+---
+
+### ❌ Mistake
+
+I accidentally committed:
+
+```
+day-04/.terraform/providers/.../terraform-provider-aws
+```
+
+Which caused:
+
+* GitHub push rejection
+* Repository corruption risk
+* Poor DevOps practice
+
+---
+
+### ✅ Solution (Step-by-Step)
+
+#### 1. Identify the large file
+
+```
+git rev-list --objects --all | grep terraform-provider
+```
+
+---
+
+#### 2. Remove file from Git history
+
+```
+git filter-repo --path day-04/.terraform --invert-paths
+```
+
+---
+
+#### 3. Force push cleaned repo
+
+```
+git push origin main --force
+```
+
+---
+
+### 🛡️ Prevention (.gitignore)
+
+Added:
+
+```
+.terraform/
+*.tfstate
+*.tfstate.backup
+```
+
+---
+
+### 🧠 Key Learnings
+
+* `.terraform/` is a **generated directory**, not source code
+* Never commit:
+
+  * Terraform providers
+  * State files
+  * binaries
+* Git history matters — deleting a file is not enough
+* Use tools like `git filter-repo` to clean history
+
+---
+
+### 💡 DevOps Best Practice
+
+Always check before pushing:
+
+```
+git status
+git diff --staged
+```
+
+---
+
+### 🔥 Real-World Insight
+
+This is a common mistake in DevOps projects.
+
+👉 Fixing it properly demonstrates:
+
+* Git expertise
+* Infrastructure awareness
+* Production-level thinking
+
+---
+
+### 🚀 Improvement for Future
+
+* Set up `.gitignore` before starting Terraform
+* Use clean repo structure
+* Validate commits before push
+
+---
+
